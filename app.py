@@ -18,8 +18,12 @@ load_dotenv()
 PINECONE_API_KEY=os.environ.get("PINECONE_API_KEY")
 GROQ_API_KEY=os.environ.get("GROQ_API_KEY")
 
-os.environ["PINECONE_API_KEY"]=PINECONE_API_KEY
-os.environ["GROQ_API_KEY"]=GROQ_API_KEY
+if PINECONE_API_KEY:
+    os.environ["PINECONE_API_KEY"]=PINECONE_API_KEY
+if GROQ_API_KEY:
+    os.environ["GROQ_API_KEY"]=GROQ_API_KEY
+else:
+    print("WARNING: GROQ_API_KEY is not set in the environment or .env file.")
 
 
 embeddings = download_embedings()
