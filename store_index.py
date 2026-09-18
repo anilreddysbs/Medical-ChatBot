@@ -9,12 +9,8 @@ load_dotenv()
 
 
 PINECONE_API_KEY=os.environ.get("PINECONE_API_KEY")
-ollama=os.environ.get("ollama")
-OPENAI_API_KEY=os.environ.get("OPENAI_API_KEY")
 
 os.environ["PINECONE_API_KEY"]=PINECONE_API_KEY
-os.environ["ollama"]=ollama
-os.environ["OPENAI_API_KEY"]=OPENAI_API_KEY
 
 
 extracted_data=load_pdf_files(data='data/')

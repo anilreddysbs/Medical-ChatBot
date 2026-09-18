@@ -1,13 +1,13 @@
 from flask import Flask, render_template, jsonify, request
-from src.helper import download_hugging_face_embeddings
+from src.helper import download_embedings
 from langchain_pinecone import PineconeVectorStore
-from langchain_classic.chains import create_retrieval_chain
-from langchain_classic.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 from src.prompt import *
 import os
-from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
 
 
 app = Flask(__name__)
@@ -16,15 +16,13 @@ app = Flask(__name__)
 load_dotenv()
 
 PINECONE_API_KEY=os.environ.get("PINECONE_API_KEY")
-ollama=os.environ.get("ollama")
-OPENAI_API_KEY=os.environ.get("OPENAI_API_KEY")
+GROQ_API_KEY=os.environ.get("GROQ_API_KEY")
 
 os.environ["PINECONE_API_KEY"]=PINECONE_API_KEY
-os.environ["ollama"]=ollama
-os.environ["OPENAI_API_KEY"]=OPENAI_API_KEY
+os.environ["GROQ_API_KEY"]=GROQ_API_KEY
 
 
-embeddings = download_hugging_face_embeddings()
+embeddings = download_embedings()
 
 index_name = "medical-chatbot" 
 # Embed each chunk and upsert the embeddings into your Pinecone index.
@@ -40,9 +38,9 @@ retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":
 
 
 
-chatmodel = ChatOllama(
-    model="qwen2.5:0.5b",
-    temperature=0
+chatmodel = ChatGroq(
+    groq_api_key=os.environ.get("GROQ_API_KEY"),
+    model_name="llama3-8b-8192"
 )
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -51,7 +49,7 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-question_answer_chain = create_stuff_documents_chain(chatModel, prompt)
+question_answer_chain = create_stuff_documents_chain(chatmodel, prompt)
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
 
