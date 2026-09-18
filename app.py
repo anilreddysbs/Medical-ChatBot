@@ -12,7 +12,7 @@ from langchain_groq import ChatGroq
 
 app = Flask(__name__)
 
-
+print("loading variables")
 load_dotenv()
 
 PINECONE_API_KEY=os.environ.get("PINECONE_API_KEY")
@@ -25,18 +25,17 @@ if GROQ_API_KEY:
 else:
     print("WARNING: GROQ_API_KEY is not set in the environment or .env file.")
 
-
+print("loading embeddings")
 embeddings = download_embedings()
-
+print("Embeddings loaded")
+print("loading pinecone vector store")
 index_name = "medical-chatbot" 
 # Embed each chunk and upsert the embeddings into your Pinecone index.
 docsearch = PineconeVectorStore.from_existing_index(
     index_name=index_name,
     embedding=embeddings
 )
-
-
-
+print("Vector store loaded")
 
 retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3})
 
@@ -44,7 +43,7 @@ retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":
 
 chatmodel = ChatGroq(
     groq_api_key=os.environ.get("GROQ_API_KEY"),
-    model_name="llama3-8b-8192"
+    model_name="openai/gpt-oss-20b"
 )
 prompt = ChatPromptTemplate.from_messages(
     [
