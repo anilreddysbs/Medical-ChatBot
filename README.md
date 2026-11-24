@@ -1,130 +1,120 @@
-# Build-a-Complete-Medical-Chatbot-with-LLMs-LangChain-Pinecone-Flask-AWS
+# Medical PDF Q&A Chatbot
 
-# How to run?
-### STEPS:
+A Flask-based retrieval-augmented generation (RAG) application that answers questions using information retrieved from a Pinecone vector index built from PDF documents. The project uses Hugging Face Sentence Transformers for embeddings and a Groq-hosted chat model to generate responses.
 
-Clone the repository
+## How it works
 
-```bash
-git clonehttps://github.com/entbappy/Build-a-Complete-Medical-Chatbot-with-LLMs-LangChain-Pinecone-Flask-AWS.git
-```
-### STEP 01- Create a conda environment after opening the repository
+1. PDF files are loaded from the `data/` directory.
+2. The text is split into overlapping chunks.
+3. The `all-MiniLM-L6-v2` embedding model converts each chunk into a 384-dimensional vector.
+4. The vectors and document metadata are stored in a Pinecone index named `medical-chatbot`.
+5. The Flask app retrieves the most relevant passages and passes them to the chat model with a medical-domain system prompt.
+6. The generated answer is returned through the chat interface.
 
-```bash
-conda create -n medibot python=3.10 -y
-```
+## Technology
 
-```bash
-conda activate medibot
-```
+- Python and Flask
+- LangChain
+- Sentence Transformers (`all-MiniLM-L6-v2`)
+- Pinecone
+- Groq API
+- PyPDF
 
+## Requirements
 
-### STEP 02- install the requirements
-```bash
-pip install -r requirements.txt
-```
+- Python 3.10 recommended
+- A Pinecone account and API key
+- A Groq API key
+- A Pinecone index configured for 384-dimensional vectors and cosine similarity
 
+## Setup
 
-### Create a `.env` file in the root directory and add your Pinecone & openai credentials as follows:
-
-```ini
-PINECONE_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-OPENAI_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-```
-
+### 1. Clone the repository
 
 ```bash
-# run the following command to store embeddings to pinecone
+git clone https://github.com/anilreddysbs/Medical-ChatBot.git
+cd Medical-ChatBot
+```
+
+### 2. Create and activate a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+```bash
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+
+# macOS / Linux
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### 4. Configure credentials
+
+Create a `.env` file in the project root:
+
+```dotenv
+PINECONE_API_KEY=your_pinecone_api_key
+GROQ_API_KEY=your_groq_api_key
+```
+
+Never commit real credentials. Keep the `.env` file private.
+
+### 5. Add PDF documents
+
+Place the PDF documents you are permitted to process in the `data/` directory.
+
+### 6. Build or refresh the Pinecone index
+
+Run:
+
+```bash
 python store_index.py
 ```
 
+The indexing script reads PDFs from `data/`, chunks the extracted text, generates embeddings, and upserts the vectors into the `medical-chatbot` index. The current script creates the index in Pinecone's AWS `us-east-1` region when it does not already exist.
+
+### 7. Start the application
+
 ```bash
-# Finally run the following command
 python app.py
 ```
 
-Now,
-```bash
-open up localhost:
+Open [http://127.0.0.1:8080](http://127.0.0.1:8080) in your browser.
+
+## Project structure
+
+```text
+app.py          Flask chat application and retrieval chain
+store_index.py  PDF indexing and Pinecone vector upsert
+src/helper.py   PDF loading, text splitting, and embeddings
+src/prompt.py   System prompt used for answer generation
+data/           Source PDF documents
+research/       Development and experiment materials
 ```
 
+## Configuration details
 
-### Techstack Used:
+- Embedding model: `sentence-transformers/all-MiniLM-L6-v2`
+- Embedding dimension: `384`
+- Chunk size: `500` characters
+- Chunk overlap: `20` characters
+- Pinecone index: `medical-chatbot`
+- Retrieval: similarity search with the top 3 results
+- Chat model: `openai/gpt-oss-20b` through Groq
 
-- Python
-- LangChain
-- Flask
-- GPT
-- Pinecone
+## Important limitations and responsible use
 
+This is an educational RAG project, not a medical device or a substitute for professional medical advice. Generated responses can be incomplete or incorrect; do not use them for diagnosis, treatment, or emergency decisions.
 
+The current Flask entry point runs with debug mode enabled. Keep it restricted to local development and do not expose that development server directly to the public internet. Review authentication, data privacy, logging, and deployment security before any broader use.
 
-# AWS-CICD-Deployment-with-Github-Actions
-
-## 1. Login to AWS console.
-
-## 2. Create IAM user for deployment
-
-	#with specific access
-
-	1. EC2 access : It is virtual machine
-
-	2. ECR: Elastic Container registry to save your docker image in aws
-
-
-	#Description: About the deployment
-
-	1. Build docker image of the source code
-
-	2. Push your docker image to ECR
-
-	3. Launch Your EC2 
-
-	4. Pull Your image from ECR in EC2
-
-	5. Lauch your docker image in EC2
-
-	#Policy:
-
-	1. AmazonEC2ContainerRegistryFullAccess
-
-	2. AmazonEC2FullAccess
-
-	
-## 3. Create ECR repo to store/save docker image
-    - Save the URI: 315865595366.dkr.ecr.us-east-1.amazonaws.com/medicalbot
-
-	
-## 4. Create EC2 machine (Ubuntu) 
-
-## 5. Open EC2 and Install docker in EC2 Machine:
-	
-	
-	#optinal
-
-	sudo apt-get update -y
-
-	sudo apt-get upgrade
-	
-	#required
-
-	curl -fsSL https://get.docker.com -o get-docker.sh
-
-	sudo sh get-docker.sh
-
-	sudo usermod -aG docker ubuntu
-
-	newgrp docker
-	
-# 6. Configure EC2 as self-hosted runner:
-    setting>actions>runner>new self hosted runner> choose os> then run command one by one
-
-
-# 7. Setup github secrets:
-
-   - AWS_ACCESS_KEY_ID
-   - AWS_SECRET_ACCESS_KEY
-   - AWS_DEFAULT_REGION
-   - ECR_REPO
-   - PINECONE_API_KEY
-   - OPENAI_API_KEY
+Only index documents you are authorized to process. Avoid uploading real patient records or other sensitive personal information to third-party services unless the necessary legal basis, permissions, and safeguards are in place.
